@@ -1,3 +1,4 @@
+import uuid
 from dataclasses import dataclass
 from enum import Enum
 from typing import List
@@ -33,19 +34,57 @@ class Transacao:
 
 class LedgerContaCorrente:
     def __init__(self):
-        pass
+        self._transacoes: List[Transacao] = []
 
     def depositar(self, valor: float) -> Transacao:
-        pass
+        if valor <= 0:
+            raise ValueError("O valor do depósito deve ser positivo")
+
+        transacao = Transacao(
+            id=str(uuid.uuid4()),
+            valor=valor,
+            tipo=TipoTransacao.CREDITO,
+            status=StatusTransacao.CONCLUIDO,
+        )
+        self._transacoes.append(transacao)
+        return transacao
 
     def sacar(self, valor: float) -> Transacao:
-        pass
+        if valor <= 0:
+            raise ValueError("O valor do saque deve ser positivo")
+
+        if self.obter_saldo() < valor:
+            raise SaldoInsuficienteError("Saldo insuficiente para realizar o saque")
+
+        transacao = Transacao(
+            id=str(uuid.uuid4()),
+            valor=valor,
+            tipo=TipoTransacao.DEBITO,
+            status=StatusTransacao.CONCLUIDO,
+        )
+        self._transacoes.append(transacao)
+        return transacao
 
     def estornar(self, transacao_id: str) -> Transacao:
-        pass
+        for transacao in self._transacoes:
+            if transacao.id == transacao_id:
+                if transacao.status != StatusTransacao.CONCLUIDO:
+                    raise TransacaoInvalidaError("Transação já se encontra estornada")
+
+                transacao.status = StatusTransacao.ESTORNADO
+                return transacao
+
+        raise TransacaoInvalidaError(f"Transação com ID {transacao_id} não encontrada")
 
     def obter_saldo(self) -> float:
-        pass
+        saldo = 0.0
+        for t in self._transacoes:
+            if t.status == StatusTransacao.CONCLUIDO:
+                if t.tipo == TipoTransacao.CREDITO:
+                    saldo += t.valor
+                elif t.tipo == TipoTransacao.DEBITO:
+                    saldo -= t.valor
+        return round(saldo, 2)
 
     def obter_historico(self) -> List[Transacao]:
-        pass
+        return list(self._transacoes)
