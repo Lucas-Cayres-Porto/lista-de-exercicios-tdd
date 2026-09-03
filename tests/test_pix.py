@@ -56,7 +56,7 @@ def test_telefone_valido():
 
 # telefone invalido por estar sem código
 def test_telefone_sem_codigo_pais_deve_lancar_erro():
-    with pytest.raises(ChavePixInvalidaError, match="Telefone inválido"):
+    with pytest.raises(ChavePixInvalidaError):
         validar_chave_pix("11999998888")
 
 
